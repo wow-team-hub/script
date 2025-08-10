@@ -287,7 +287,7 @@ minimizeBtn.Name = "MinimizeButton"
 minimizeBtn.Size = UDim2.new(0, 28, 0, 28)
 minimizeBtn.Position = UDim2.new(0, 10, 0, 10) -- à côté du main
 minimizeBtn.BackgroundTransparency = 1
-minimizeBtn.Image = "rbxassetid://1234567890" -- 🔹 Ton ID d'image ici
+minimizeBtn.Image = "rbxassetid://86138221220091" -- 🔹 Ton ID d'image ici
 minimizeBtn.Parent = gui
 
 -- Pour que le bouton suive le main
