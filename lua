@@ -291,7 +291,7 @@ minimizeBtn.Image = "rbxassetid://86138221220091" -- 🔹 Ton ID d'image ici
 minimizeBtn.Parent = gui
 
 -- Pour que le bouton suive le main
-main:GetPropertyChangedSignal("Posit ion"):Connect(function()
+main:GetPropertyChangedSignal("Position"):Connect(function()
 	minimizeBtn.Position = UDim2.new(0, main.AbsolutePosition.X + main.AbsoluteSize.X + 8, 0, main.AbsolutePosition.Y + 6)
 end)
 main:GetPropertyChangedSignal("Size"):Connect(function()
@@ -669,7 +669,7 @@ task.spawn(function()
 	while true do
 		task.wait()
 		local success, err = pcall(function()
-			if data.Strength.Value < 210000001 and game.PlaceId ~= 3311165597 and savedStates["TPBossPlanet"] then
+			if data.Strength.Value < 150000001 and game.PlaceId ~= 3311165597 and savedStates["TPBossPlanet"] then
 				local A_1 = "Earth"
 				local Event = events.TP
 				if game.PlaceId ~= 3311165597 then
@@ -677,7 +677,7 @@ task.spawn(function()
 
 					task.wait(8)
 				end
-			elseif data.Strength.Value >= 210000001  and game.PlaceId ~= 5151400895 and savedStates["TPBossPlanet"] then
+			elseif data.Strength.Value >= 150000001  and game.PlaceId ~= 5151400895 and savedStates["TPBossPlanet"] then
 				local A_1 = "Vills Planet"
 				local Event = events.TP
 				if game.PlaceId ~= 5151400895 then
@@ -1312,30 +1312,36 @@ safePunchLoop()
 
 
 
-local player = game.Players.LocalPlayer
 
-local function onCharacterAdded(character)
-    local humanoid = character:WaitForChild("Humanoid")
+local player = game.Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+local humanoid = character:WaitForChild("Humanoid")
+
+local function doubleJump()
+    local humanoidRootPart = character:FindFirstChild("HumanoidRootPart")
+    if humanoidRootPart then
+        -- Simule le saut deux fois avec un petit délai
+        humanoid.Jump = true
+        wait(0.1)
+        humanoid.Jump = true
+    end
+end
+
+local function onCharacterAdded(char)
+    character = char
+    humanoid = character:WaitForChild("Humanoid")
 
     humanoid.Died:Connect(function()
-        -- Quand le joueur meurt, attends la réapparition
-        player.CharacterAdded:Wait()
-        local newCharacter = player.Character or player.CharacterAdded:Wait()
-        local newHumanoid = newCharacter:WaitForChild("Humanoid")
-
-        wait(0.5) -- petit délai pour que le perso soit prêt
-
-        -- Double saut
-        newHumanoid.Jump = true
-        wait(0.1)
-        newHumanoid.Jump = true
+        wait(5)  -- attends un peu avant de faire le double saut à la réapparition
+        player.CharacterAdded:Wait()  -- attends que le personnage réapparaisse
+        character = player.Character
+        humanoid = character:WaitForChild("Humanoid")
+        wait(0.5)  -- petit délai pour que le perso soit prêt
+        doubleJump()
     end)
 end
 
--- Relance à chaque apparition du perso
 player.CharacterAdded:Connect(onCharacterAdded)
 
--- Si le personnage est déjà là au lancement
-if player.Character then
-    onCharacterAdded(player.Character)
-end
+-- Initialise sur le personnage actuel
+onCharacterAdded(character)
