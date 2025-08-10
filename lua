@@ -570,6 +570,101 @@ end)
 
 
 
+
+
+
+local STARTT = true
+local lplr = game.Players.LocalPlayer
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+local Package = ReplicatedStorage:WaitForChild("Package")
+local Events = Package:WaitForChild("Events")
+local StartEvent = Events:WaitForChild("Start")
+
+pcall(function()
+  
+    if STARTT then
+        
+        
+        if lplr.PlayerGui:FindFirstChild("Start") then
+           
+            
+            local success, err = pcall(function()
+                StartEvent:InvokeServer()
+               
+            end)
+            if not success then
+              
+            end
+
+            local title = Workspace.Others:FindFirstChild("Title")
+            if title then
+              
+                title:Destroy()
+            else
+             
+            end
+
+            local cam = Workspace.CurrentCamera
+            if cam then
+               
+                cam.CameraType = Enum.CameraType.Custom
+                
+                if lplr.Character and lplr.Character:FindFirstChild("Humanoid") then
+                    cam.CameraSubject = lplr.Character.Humanoid
+                
+                else
+                  
+                end
+            else
+             
+            end
+
+            _G.Ready = true
+          
+
+            local successCoreGui, errCoreGui = pcall(function()
+                game.StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.All, true)
+               
+            end)
+            if not successCoreGui then
+               
+            end
+
+            if lplr.PlayerGui:FindFirstChild("Main") then
+                lplr.PlayerGui.Main.Enabled = true
+                
+            else
+                
+            end
+
+            local startGui = lplr.PlayerGui:FindFirstChild("Start")
+            if startGui then
+                startGui:Destroy()
+                
+            else
+               
+            end
+
+            if lplr.PlayerGui.Main:FindFirstChild("bruh") then
+                local bruhGui = lplr.PlayerGui.Main.bruh
+                bruhGui.Enabled = false
+             
+                bruhGui.Enabled = true
+         
+            else
+               
+            end
+        else
+          
+        end
+    else
+       
+    end
+   
+end)
+
+
 task.spawn(function()
 	while true do
 		task.wait()
@@ -1026,110 +1121,169 @@ end)
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Players = game:GetService("Players")
+local HttpService = game:GetService("HttpService")
 
--- Config des chemins par PlaceId
+local placeId = game.PlaceId
+local attackArgument = "Blacknwhite27"
+
+
+local DISCORD_WEBHOOK_URL = "https://discord.com/api/webhooks/1404159527267467325/bOik9DENiKAzjrpTjtMo0d7ajVWI0cFHeXnYSIxT3l8L6eDAsMqm-RELfL4HWStoso0a"
+
+-- Table des chemins par placeId
 local PlaceConfig = {
-    [3311165597] = { attackPath = { "Package", "Events", "letsplayagame" }, volleyPath = { "Package", "Events", "voleys" } },
-    [5151400895] = { attackPath = { "Package", "Events", "b", "Dece" }, volleyPath = { "Package", "Events", "voleys" } }
+    [3311165597] = { path = { "Package", "Events", "letsplayagame" } },
+    [5151400895] = { path = { "Package", "Events", "b", "Dece" } }
 }
 
--- Récupère les chemins du Remote
-local function getPath(root, pathArray)
-    local obj = root
-    for _, part in ipairs(pathArray) do
-        obj = obj:FindFirstChild(part)
-        if not obj then return nil end
-    end
-    return obj
-end
-
-local config = PlaceConfig[game.PlaceId]
+local config = PlaceConfig[placeId]
 if not config then
-    warn("⚠️ Aucun chemin configuré pour ce PlaceId :", game.PlaceId)
+    warn("Ce script n'est pas prévu pour ce placeId :", placeId)
     return
 end
 
--- Remotes sécurisés
-local attackRemote = getPath(ReplicatedStorage, config.attackPath)
-local volleyRemote = getPath(ReplicatedStorage, config.volleyPath)
+-- Fonction pour WaitForChild sur tout le chemin
+local function waitForPath(root, parts, timeout)
+    local current = root
+    for _, part in ipairs(parts) do
+        current = current:WaitForChild(part, timeout or 10)
+        if not current then return nil end
+    end
+    return current
+end
 
-if not attackRemote then
-    warn("❌ Remote d'attaque introuvable pour ce PlaceId :", game.PlaceId)
+-- Fonction envoi Discord (basique)
+local function sendDiscordAlert(message)
+    if not syn or not syn.request then return end
+    local payload = {
+        content = "@everyone",
+        embeds = {{
+            title = "⚠️ **ALERTE REMOTE PATH** ⚠️",
+            description = message,
+            color = 0xFF0000,
+            footer = { text = "Auto Attack Script" },
+            timestamp = os.date("!%Y-%m-%dT%H:%M:%SZ")
+        }}
+    }
+    local data = HttpService:JSONEncode(payload)
+    pcall(function()
+        syn.request({
+            Url = DISCORD_WEBHOOK_URL,
+            Method = "POST",
+            Headers = { ["Content-Type"] = "application/json" },
+            Body = data
+        })
+    end)
+end
+
+-- Récupération des remotes avec vérif
+local attackRemote = waitForPath(ReplicatedStorage, config.path, 15)
+local volleyRemote = waitForPath(ReplicatedStorage, { "Package", "Events", "voleys" }, 5)
+
+if not attackRemote or not (attackRemote:IsA("RemoteFunction") or attackRemote:IsA("RemoteEvent")) then
+    local msg = "❌ Remote d'attaque introuvable ou type invalide pour le PlaceId " .. tostring(placeId)
+    warn(msg)
+    sendDiscordAlert(msg)
     return
 end
 
--- Boucle principale
+if volleyRemote and not (volleyRemote:IsA("RemoteFunction") or volleyRemote:IsA("RemoteEvent")) then
+    local msg = "⚠️ Remote volley trouvé mais type invalide, désactivation du volley."
+    warn(msg)
+    sendDiscordAlert(msg)
+    volleyRemote = nil
+end
+
+-- Fonction safeInvoke
+local function safeInvoke(remote, ...)
+    if not remote then return false end
+    local args = {...}
+    if remote:IsA("RemoteFunction") then
+        return pcall(function()
+            return remote:InvokeServer(table.unpack(args))
+        end)
+    else
+        return pcall(function()
+            remote:FireServer(table.unpack(args))
+        end)
+    end
+end
+
+-- Boucle principale d’attaque
 task.spawn(function()
-	while true do
-		task.wait(0.7)
+    while true do
+        task.wait(0.1)
 
-		if not  savedStates["AutoNotSafeSkills"] then
-			continue
-		end
+        if not savedStates["AutoNotSafeSkills"] then
+            continue
+        end
 
-		local lplr = Players.LocalPlayer
-		local character = lplr.Character
-		if not character then continue end
+        local lplr = Players.LocalPlayer
+        local character = lplr.Character
+        if not character then continue end
 
-		local stats = character:FindFirstChild("Stats")
-		local humanoid = character:FindFirstChild("Humanoid")
-		if not stats or not humanoid then continue end
+        local stats = character:FindFirstChild("Stats")
+        local humanoid = character:FindFirstChild("Humanoid")
+        if not stats or not humanoid then continue end
 
-		local Ki = stats:FindFirstChild("Ki")
-		if not Ki then continue end
+        local Ki = stats:FindFirstChild("Ki")
+        if not Ki then continue end
 
-		for _, player in ipairs(Players:GetPlayers()) do
-			local ldata = ReplicatedStorage.Datas:FindFirstChild(player.UserId)
-			if not ldata or not ldata:FindFirstChild("Quest") then continue end
+        for _, player in ipairs(Players:GetPlayers()) do
+            local ldata = ReplicatedStorage.Datas:FindFirstChild(tostring(player.UserId))
+            if not ldata or not ldata:FindFirstChild("Quest") then continue end
 
-			if ldata.Quest.Value ~= ""
-				and ldata:FindFirstChild("Strength") and ldata.Strength.Value > 400000
-				and ldata:FindFirstChild("Energy") and ldata.Energy.Value > 400000
-				and ldata:FindFirstChild("Defense") and ldata.Defense.Value > 400000
-				and ldata:FindFirstChild("Speed") and ldata.Speed.Value > 400000
-			then
-				local playerChar = player.Character
-				local hrp = playerChar and playerChar:FindFirstChild("HumanoidRootPart")
-				if not hrp then continue end
+            if ldata.Quest.Value ~= ""
+                and ldata:FindFirstChild("Strength") and ldata.Strength.Value > 400000
+                and ldata:FindFirstChild("Energy") and ldata.Energy.Value > 400000
+                and ldata:FindFirstChild("Defense") and ldata.Defense.Value > 400000
+                and ldata:FindFirstChild("Speed") and ldata.Speed.Value > 400000
+            then
+                local playerChar = player.Character
+                local hrp = playerChar and playerChar:FindFirstChild("HumanoidRootPart")
+                if not hrp then continue end
 
-				local closestBoss, closestDistance = nil, math.huge
-				for _, v in ipairs(workspace.Living:GetChildren()) do
-					if v:IsA("Model") and v:FindFirstChild("Humanoid") and v:FindFirstChild("HumanoidRootPart") then
-						local dist = (hrp.Position - v.HumanoidRootPart.Position).Magnitude
-						if dist < closestDistance and v.Humanoid.Health > 0 and v.Name ~= playerChar.Name then
-							closestDistance, closestBoss = dist, v
-						end
-					end
-				end
+                local closestBoss, closestDistance = nil, math.huge
+                local living = workspace:FindFirstChild("Living")
+                if not living then continue end
 
-				if closestBoss and closestDistance <= 5 and closestBoss.Humanoid.Health > 0 then
-					local attacks = {
-						"Super Dragon Fist", "God Slicer", "Spirit Barrage", "Mach Kick",
-						"Wolf Fang Fist", "High Power Rush", "Meteor Strike", "Meteor Charge",
-						function()
-							if volleyRemote then
-								volleyRemote:InvokeServer("Energy Volley", {
-									FaceMouse = false,
-									MouseHit = CFrame.new()
-								}, "Blacknwhite27")
-							end
-						end
-					}
+                for _, mob in ipairs(living:GetChildren()) do
+                    if mob:IsA("Model") and mob:FindFirstChild("Humanoid") and mob:FindFirstChild("HumanoidRootPart") then
+                        local dist = (hrp.Position - mob.HumanoidRootPart.Position).Magnitude
+                        if dist < closestDistance and mob.Humanoid.Health > 0 and mob.Name ~= playerChar.Name then
+                            closestDistance, closestBoss = dist, mob
+                        end
+                    end
+                end
 
-					for _, attack in ipairs(attacks) do
-						task.spawn(function()
-							if typeof(attack) == "string" then
-								attackRemote:InvokeServer(attack, "Blacknwhite27")
-							elseif typeof(attack) == "function" then
-								attack()
-							end
-						end)
-					end
-				end
-			end
-		end
-	end
+                if closestBoss and closestDistance <= 5 and closestBoss.Humanoid.Health > 0 then
+                    local attacks = {
+                        "Super Dragon Fist", "God Slicer", "Spirit Barrage", "Mach Kick",
+                        "Wolf Fang Fist", "High Power Rush", "Meteor Strike", "Meteor Charge",
+                        function()
+                            if volleyRemote then
+                                safeInvoke(volleyRemote, "Energy Volley", {
+                                    FaceMouse = false,
+                                    MouseHit = CFrame.new()
+                                }, attackArgument)
+                            end
+                        end
+                    }
+
+                    for _, attack in ipairs(attacks) do
+                        task.spawn(function()
+                            if typeof(attack) == "string" then
+                                safeInvoke(attackRemote, attack, attackArgument)
+                            elseif typeof(attack) == "function" then
+                                attack()
+                            end
+                        end)
+                    end
+                end
+            end
+        end
+    end
 end)
+
 
 
 
@@ -1155,3 +1309,39 @@ local function safePunchLoop()
 end
 
 safePunchLoop()
+
+
+
+
+local player = game.Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+local humanoid = character:WaitForChild("Humanoid")
+
+local function doubleJump()
+    local humanoidRootPart = character:FindFirstChild("HumanoidRootPart")
+    if humanoidRootPart then
+        -- Simule le saut deux fois avec un petit délai
+        humanoid.Jump = true
+        wait(0.1)
+        humanoid.Jump = true
+    end
+end
+
+local function onCharacterAdded(char)
+    character = char
+    humanoid = character:WaitForChild("Humanoid")
+
+    humanoid.Died:Connect(function()
+        wait(5)  -- attends un peu avant de faire le double saut à la réapparition
+        player.CharacterAdded:Wait()  -- attends que le personnage réapparaisse
+        character = player.Character
+        humanoid = character:WaitForChild("Humanoid")
+        wait(0.5)  -- petit délai pour que le perso soit prêt
+        doubleJump()
+    end)
+end
+
+player.CharacterAdded:Connect(onCharacterAdded)
+
+-- Initialise sur le personnage actuel
+onCharacterAdded(character)
