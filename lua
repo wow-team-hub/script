@@ -1069,10 +1069,8 @@ local function sendDiscordAlert(message)
         embeds = {{
             title = "⚠️ **ALERTE REMOTE PATH** ⚠️",
             description = message,
-            color = 0xFF0000, -- rouge
-            footer = {
-                text = "Auto Attack Script"
-            },
+            color = 0xFF0000,
+            footer = { text = "Auto Attack Script" },
             timestamp = os.date("!%Y-%m-%dT%H:%M:%SZ")
         }}
     }
@@ -1082,9 +1080,7 @@ local function sendDiscordAlert(message)
         return syn.request({
             Url = DISCORD_WEBHOOK_URL,
             Method = "POST",
-            Headers = {
-                ["Content-Type"] = "application/json"
-            },
+            Headers = { ["Content-Type"] = "application/json" },
             Body = data
         })
     end)
@@ -1111,7 +1107,7 @@ if not attackRemote then
 end
 
 if scriptStopped then
-    return -- Stoppe toute exécution du script
+    return
 end
 
 if not doHandshake(attackRemote) then
@@ -1121,6 +1117,7 @@ end
 
 local volleyRemote = getInstanceFromPath(ReplicatedStorage, "Package.Events.voleys")
 
+-- Liste des skills (restée pour référence mais non utilisée directement ici)
 local attacks = {
     "Super Dragon Fist", "God Slicer", "Spirit Barrage", "Mach Kick",
     "Wolf Fang Fist", "High Power Rush", "Meteor Strike", "Meteor Charge"
@@ -1155,9 +1152,9 @@ local lastAttack = 0
 task.spawn(function()
     while true do
         task.wait(0.1)
-        if scriptStopped then break end -- STOP la boucle si flag true
+        if scriptStopped then break end
 
-        if not savedStates["AutoNotSafeSkills"]  then continue end
+        if not savedStates["AutoNotSafeSkills"] then continue end
 
         local lplr = Players.LocalPlayer
         if not lplr.Character or not lplr.Character:FindFirstChild("Humanoid") then continue end
@@ -1180,11 +1177,8 @@ task.spawn(function()
                 if boss and tick() - lastAttack >= attackCooldown then
                     lastAttack = tick()
 
-                    for _, skill in ipairs(attacks) do
-                        task.spawn(function()
-                            safeInvoke(attackRemote, skill, attackArgument)
-                        end)
-                    end
+                    -- Correction ici : arguments comme dans tes vrais exemples
+                    safeInvoke(attackRemote, "Attacks", attackArgument)
 
                     if volleyRemote then
                         safeInvoke(volleyRemote, "Energy Volley", {
