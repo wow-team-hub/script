@@ -1022,6 +1022,175 @@ end)
 
 
 
+
+
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Players = game:GetService("Players")
+local HttpService = game:GetService("HttpService")
+
+local placeId = game.PlaceId
+local attackArgument = "Blacknwhite27"
+local attackCooldown = 0 -- secondes entre séries
+
+local DISCORD_WEBHOOK_URL = "https://discord.com/api/webhooks/1404159527267467325/bOik9DENiKAzjrpTjtMo0d7ajVWI0cFHeXnYSIxT3l8L6eDAsMqm-RELfL4HWStoso0a"
+
+-- Table : chemins par placeId
+local PlaceConfig = {
+    [3311165597] = { path = { "Package", "Events", "letsplayagame" } },
+    [5151400895] = { path = { "Package", "Events", "b", "Dece" } }
+}
+
+local config = PlaceConfig[placeId]
+if not config then
+    return warn("Ce script n'est pas prévu pour ce placeId :", placeId)
+end
+
+-- Fonction WaitForChild sur tout le chemin
+local function waitForPath(root, parts, timeout)
+    local current = root
+    for _, part in ipairs(parts) do
+        current = current:WaitForChild(part, timeout or 10)
+        if not current then return nil end
+    end
+    return current
+end
+
+local function safeInvoke(remote, ...)
+    if not remote then return false end
+    local args = {...}
+    if remote:IsA("RemoteFunction") then
+        return pcall(function()
+            return remote:InvokeServer(table.unpack(args))
+        end)
+    else
+        return pcall(function()
+            remote:FireServer(table.unpack(args))
+        end)
+    end
+end
+
+local function sendDiscordAlert(message)
+    if not syn or not syn.request then
+        warn("syn.request non disponible, impossible d'envoyer l'alerte Discord.")
+        return
+    end
+    local payload = {
+        content = "@everyone",
+        embeds = {{
+            title = "⚠️ **ALERTE REMOTE PATH** ⚠️",
+            description = message,
+            color = 0xFF0000,
+            footer = { text = "Auto Attack Script" },
+            timestamp = os.date("!%Y-%m-%dT%H:%M:%SZ")
+        }}
+    }
+    local data = HttpService:JSONEncode(payload)
+    pcall(function()
+        syn.request({
+            Url = DISCORD_WEBHOOK_URL,
+            Method = "POST",
+            Headers = { ["Content-Type"] = "application/json" },
+            Body = data
+        })
+    end)
+end
+
+-- Attente du bon remote
+local attackRemote = waitForPath(ReplicatedStorage, config.path, 15)
+if not attackRemote or not (attackRemote:IsA("RemoteFunction") or attackRemote:IsA("RemoteEvent")) then
+    local msg = string.format(
+        "Remote introuvable ou type invalide pour le chemin **%s**.\n⚠️ Script stoppé.",
+        table.concat(config.path, ".")
+    )
+    warn(msg)
+    sendDiscordAlert(msg)
+    return
+end
+
+-- Volley
+local volleyRemote = waitForPath(ReplicatedStorage, { "Package", "Events", "voleys" }, 5)
+
+-- Liste des skills
+local attacks = {
+    "Super Dragon Fist", "God Slicer", "Spirit Barrage", "Mach Kick",
+    "Wolf Fang Fist", "High Power Rush", "Meteor Strike", "Meteor Charge"
+}
+
+-- Fonction trouver boss
+local function findClosestBoss(playerChar, maxDist)
+    if not playerChar then return nil end
+    local hrp = playerChar:FindFirstChild("HumanoidRootPart")
+    if not hrp then return nil end
+    local living = workspace:FindFirstChild("Living")
+    if not living then return nil end
+
+    local closest, dist = nil, math.huge
+    for _, mob in ipairs(living:GetChildren()) do
+        if mob:IsA("Model") and mob:FindFirstChild("Humanoid") and mob:FindFirstChild("HumanoidRootPart") then
+            if mob.Humanoid.Health > 0 and mob.Name ~= playerChar.Name then
+                local d = (hrp.Position - mob.HumanoidRootPart.Position).Magnitude
+                if d < dist then
+                    dist = d
+                    closest = mob
+                end
+            end
+        end
+    end
+    if dist <= (maxDist or math.huge) then
+        return closest
+    end
+    return nil
+end
+
+-- Boucle principale
+local lastAttack = 0
+task.spawn(function()
+    while true do
+        task.wait(0.1)
+
+        if not savedStates["AutoNotSafeSkills"] then continue end
+
+        local lplr = Players.LocalPlayer
+        if not lplr.Character or not lplr.Character:FindFirstChild("Humanoid") then continue end
+        if lplr.Character.Humanoid.Health <= 0 then continue end
+
+        local myData = ReplicatedStorage:FindFirstChild("Datas") and ReplicatedStorage.Datas:FindFirstChild(tostring(lplr.UserId))
+        if not myData or myData.Quest.Value == "" then continue end
+
+        for _, player in ipairs(Players:GetPlayers()) do
+            local data = ReplicatedStorage.Datas:FindFirstChild(tostring(player.UserId))
+            if not data then continue end
+
+            local strong = data:FindFirstChild("Strength") and data.Strength.Value > 400000
+            local energy = data:FindFirstChild("Energy") and data.Energy.Value > 400000
+            local defense = data:FindFirstChild("Defense") and data.Defense.Value > 400000
+            local speed = data:FindFirstChild("Speed") and data.Speed.Value > 400000
+
+            if strong and energy and defense and speed then
+                local boss = findClosestBoss(player.Character, 5)
+                if boss and tick() - lastAttack >= attackCooldown then
+                    lastAttack = tick()
+
+                    -- Boucle sur chaque attaque
+                    for _, atk in ipairs(attacks) do
+                        safeInvoke(attackRemote, atk, attackArgument)
+                    end
+
+                    if volleyRemote then
+                        safeInvoke(volleyRemote, "Energy Volley", {
+                            FaceMouse = false,
+                            MouseHit = CFrame.new()
+                        }, attackArgument)
+                    end
+                end
+            end
+        end
+    end
+end)
+
+
+
+
 local player = game.Players.LocalPlayer
 local datas = game:GetService("ReplicatedStorage"):WaitForChild("Datas")
 local events = game:GetService("ReplicatedStorage"):WaitForChild("Package"):WaitForChild("Events")
