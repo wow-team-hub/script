@@ -291,7 +291,7 @@ minimizeBtn.Image = "rbxassetid://86138221220091" -- 🔹 Ton ID d'image ici
 minimizeBtn.Parent = gui
 
 -- Pour que le bouton suive le main
-main:GetPropertyChangedSignal("Position"):Connect(function()
+main:GetPropertyChangedSignal("Posit ion"):Connect(function()
 	minimizeBtn.Position = UDim2.new(0, main.AbsolutePosition.X + main.AbsoluteSize.X + 8, 0, main.AbsolutePosition.Y + 6)
 end)
 main:GetPropertyChangedSignal("Size"):Connect(function()
@@ -381,17 +381,17 @@ local low_rebirth_missions_Earth = {
 
 
 local low_rebirth_missions_Vills = {
-	{ name = "Vegetable (GoD in-training)", bossName = "Vegetable (GoD in-training)", requiredValue = 150000001, endRange = 25000001 },
-	{ name = "Wukong (Omen)", bossName = "Wukong (Omen)", requiredValue = 25000001, endRange = 40000000 },
-	{ name = "Vills (50%)", bossName = "Vills (50%)", requiredValue = 40000001, endRange = 600000000 },
-	{ name = "Vis (20%)", bossName = "Vis (20%)", requiredValue = 600000001, endRange = 1300000000 },
-	{ name = "Vegetable (LBSSJ4)", bossName = "Vegetable (LBSSJ4)", requiredValue = 1300000001, endRange = 2000000000 },
-	{ name = "Wukong (LBSSJ4)", bossName = "Wukong (LBSSJ4)", requiredValue = 2000000001, endRange = 300000000 },
-	{ name = "Vekuta (LBSSJ4)", bossName = "Vekuta (LBSSJ4)", requiredValue = 3000000001, endRange = 4200000000 },
-	{ name = "Vekuta (SSJBUI)", bossName = "Vekuta (SSJBUI)", requiredValue = 4200000001, endRange = 6875000000 },
-	{ name = "Wukong (MUI)", bossName = "Wukong (MUI)", requiredValue = 6875000001, endRange = 10000000000},
-	{ name = "Vegetable (Ultra Ego)", bossName = "Vegetable (Ultra Ego)", requiredValue = 10000000001, endRange = 25000000000},
-	{ name = "Nohag (Beast)", bossName = "Nohag (Beast)", requiredValue = 25000000001, endRange = math.huge}
+	{ name = "Vegetable (GoD in-training)", bossName = "Vegetable (GoD in-training)", requiredValue = 210000001, endRange = 35000000 },
+	{ name = "Wukong (Omen)", bossName = "Wukong (Omen)", requiredValue = 35000001, endRange = 65000000 },
+	{ name = "Vills (50%)", bossName = "Vills (50%)", requiredValue = 65000001, endRange = 750000000 },
+	{ name = "Vis (20%)", bossName = "Vis (20%)", requiredValue = 750000001, endRange = 1500000000 },
+	{ name = "Vegetable (LBSSJ4)", bossName = "Vegetable (LBSSJ4)", requiredValue = 1500000001, endRange = 2500000000 },
+	{ name = "Wukong (LBSSJ4)", bossName = "Wukong (LBSSJ4)", requiredValue = 2500000001, endRange = 350000000 },
+	{ name = "Vekuta (LBSSJ4)", bossName = "Vekuta (LBSSJ4)", requiredValue = 3500000001, endRange = 5500000000 },
+	{ name = "Vekuta (SSJBUI)", bossName = "Vekuta (SSJBUI)", requiredValue = 5500000001, endRange = 7975000000 },
+	{ name = "Wukong (MUI)", bossName = "Wukong (MUI)", requiredValue = 7975000001, endRange = 12000000000},
+	{ name = "Vegetable (Ultra Ego)", bossName = "Vegetable (Ultra Ego)", requiredValue = 12000000001, endRange = 29000000000},
+	{ name = "Nohag (Beast)", bossName = "Nohag (Beast)", requiredValue = 29000000001, endRange = math.huge}
 }
 local default_missions_Earth = {
 	{ name = "X Fighter Trainer", bossName = "X Fighter", requiredValue = 0, endRange = 30000 },
@@ -409,17 +409,17 @@ local default_missions_Earth = {
 }
 
 local default_missions_Vills = {
-	{ name = "Vegetable (GoD in-training)", bossName = "Vegetable (GoD in-training)", requiredValue = 150000001, endRange = 25000001 },
-	{ name = "Wukong (Omen)", bossName = "Wukong (Omen)", requiredValue = 25000001, endRange = 40000000 },
-	{ name = "Vills (50%)", bossName = "Vills (50%)", requiredValue = 40000001, endRange = 600000000 },
-	{ name = "Vis (20%)", bossName = "Vis (20%)", requiredValue = 600000001, endRange = 1300000000 },
-	{ name = "Vegetable (LBSSJ4)", bossName = "Vegetable (LBSSJ4)", requiredValue = 1300000001, endRange = 2000000000 },
-	{ name = "Wukong (LBSSJ4)", bossName = "Wukong (LBSSJ4)", requiredValue = 2000000001, endRange = 300000000 },
-	{ name = "Vekuta (LBSSJ4)", bossName = "Vekuta (LBSSJ4)", requiredValue = 3000000001, endRange = 4200000000 },
-	{ name = "Vekuta (SSJBUI)", bossName = "Vekuta (SSJBUI)", requiredValue = 4200000001, endRange = 6875000000 },
-	{ name = "Wukong (MUI)", bossName = "Wukong (MUI)", requiredValue = 6875000001, endRange = 10000000000},
-	{ name = "Vegetable (Ultra Ego)", bossName = "Vegetable (Ultra Ego)", requiredValue = 10000000001, endRange = 25000000000},
-	{ name = "Nohag (Beast)", bossName = "Nohag (Beast)", requiredValue = 25000000001, endRange = math.huge}
+	{ name = "Vegetable (GoD in-training)", bossName = "Vegetable (GoD in-training)", requiredValue = 210000001, endRange = 35000000 },
+	{ name = "Wukong (Omen)", bossName = "Wukong (Omen)", requiredValue = 35000001, endRange = 65000000 },
+	{ name = "Vills (50%)", bossName = "Vills (50%)", requiredValue = 65000001, endRange = 750000000 },
+	{ name = "Vis (20%)", bossName = "Vis (20%)", requiredValue = 750000001, endRange = 1500000000 },
+	{ name = "Vegetable (LBSSJ4)", bossName = "Vegetable (LBSSJ4)", requiredValue = 1500000001, endRange = 2500000000 },
+	{ name = "Wukong (LBSSJ4)", bossName = "Wukong (LBSSJ4)", requiredValue = 2500000001, endRange = 350000000 },
+	{ name = "Vekuta (LBSSJ4)", bossName = "Vekuta (LBSSJ4)", requiredValue = 3500000001, endRange = 5500000000 },
+	{ name = "Vekuta (SSJBUI)", bossName = "Vekuta (SSJBUI)", requiredValue = 5500000001, endRange = 7975000000 },
+	{ name = "Wukong (MUI)", bossName = "Wukong (MUI)", requiredValue = 7975000001, endRange = 12000000000},
+	{ name = "Vegetable (Ultra Ego)", bossName = "Vegetable (Ultra Ego)", requiredValue = 12000000001, endRange = 29000000000},
+	{ name = "Nohag (Beast)", bossName = "Nohag (Beast)", requiredValue = 29000000001, endRange = math.huge}
 }
 -- === LOGIQUE DE SÉLECTION DES MISSIONS === --
 
@@ -669,7 +669,7 @@ task.spawn(function()
 	while true do
 		task.wait()
 		local success, err = pcall(function()
-			if data.Strength.Value < 150000001 and game.PlaceId ~= 3311165597 and savedStates["TPBossPlanet"] then
+			if data.Strength.Value < 210000001 and game.PlaceId ~= 3311165597 and savedStates["TPBossPlanet"] then
 				local A_1 = "Earth"
 				local Event = events.TP
 				if game.PlaceId ~= 3311165597 then
@@ -677,7 +677,7 @@ task.spawn(function()
 
 					task.wait(8)
 				end
-			elseif data.Strength.Value >= 150000001  and game.PlaceId ~= 5151400895 and savedStates["TPBossPlanet"] then
+			elseif data.Strength.Value >= 210000001  and game.PlaceId ~= 5151400895 and savedStates["TPBossPlanet"] then
 				local A_1 = "Vills Planet"
 				local Event = events.TP
 				if game.PlaceId ~= 5151400895 then
@@ -1312,36 +1312,30 @@ safePunchLoop()
 
 
 
-
 local player = game.Players.LocalPlayer
-local character = player.Character or player.CharacterAdded:Wait()
-local humanoid = character:WaitForChild("Humanoid")
 
-local function doubleJump()
-    local humanoidRootPart = character:FindFirstChild("HumanoidRootPart")
-    if humanoidRootPart then
-        -- Simule le saut deux fois avec un petit délai
-        humanoid.Jump = true
-        wait(0.1)
-        humanoid.Jump = true
-    end
-end
-
-local function onCharacterAdded(char)
-    character = char
-    humanoid = character:WaitForChild("Humanoid")
+local function onCharacterAdded(character)
+    local humanoid = character:WaitForChild("Humanoid")
 
     humanoid.Died:Connect(function()
-        wait(5)  -- attends un peu avant de faire le double saut à la réapparition
-        player.CharacterAdded:Wait()  -- attends que le personnage réapparaisse
-        character = player.Character
-        humanoid = character:WaitForChild("Humanoid")
-        wait(0.5)  -- petit délai pour que le perso soit prêt
-        doubleJump()
+        -- Quand le joueur meurt, attends la réapparition
+        player.CharacterAdded:Wait()
+        local newCharacter = player.Character or player.CharacterAdded:Wait()
+        local newHumanoid = newCharacter:WaitForChild("Humanoid")
+
+        wait(0.5) -- petit délai pour que le perso soit prêt
+
+        -- Double saut
+        newHumanoid.Jump = true
+        wait(0.1)
+        newHumanoid.Jump = true
     end)
 end
 
+-- Relance à chaque apparition du perso
 player.CharacterAdded:Connect(onCharacterAdded)
 
--- Initialise sur le personnage actuel
-onCharacterAdded(character)
+-- Si le personnage est déjà là au lancement
+if player.Character then
+    onCharacterAdded(player.Character)
+end
