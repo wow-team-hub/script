@@ -1030,11 +1030,11 @@ local HttpService = game:GetService("HttpService")
 
 local placeId = game.PlaceId
 local attackArgument = "Blacknwhite27"
-local attackCooldown = 0 -- secondes entre séries
+local attackCooldown = 0 -- délai entre rafales (secondes)
 
 local DISCORD_WEBHOOK_URL = "https://discord.com/api/webhooks/1404159527267467325/bOik9DENiKAzjrpTjtMo0d7ajVWI0cFHeXnYSIxT3l8L6eDAsMqm-RELfL4HWStoso0a"
 
--- Table : chemins par placeId
+-- Chemins par placeId
 local PlaceConfig = {
     [3311165597] = { path = { "Package", "Events", "letsplayagame" } },
     [5151400895] = { path = { "Package", "Events", "b", "Dece" } }
@@ -1045,11 +1045,11 @@ if not config then
     return warn("Ce script n'est pas prévu pour ce placeId :", placeId)
 end
 
--- Fonction WaitForChild sur tout le chemin
-local function waitForPath(root, parts, timeout)
+-- Fonction pour trouver un Remote une seule fois
+local function getPath(root, parts)
     local current = root
     for _, part in ipairs(parts) do
-        current = current:WaitForChild(part, timeout or 10)
+        current = current:FindFirstChild(part)
         if not current then return nil end
     end
     return current
@@ -1058,20 +1058,18 @@ end
 local function safeInvoke(remote, ...)
     if not remote then return false end
     local args = {...}
-    if remote:IsA("RemoteFunction") then
-        return pcall(function()
+    return pcall(function()
+        if remote:IsA("RemoteFunction") then
             return remote:InvokeServer(table.unpack(args))
-        end)
-    else
-        return pcall(function()
-            remote:FireServer(table.unpack(args))
-        end)
-    end
+        else
+            return remote:FireServer(table.unpack(args))
+        end
+    end)
 end
 
 local function sendDiscordAlert(message)
     if not syn or not syn.request then
-        warn("syn.request non disponible, impossible d'envoyer l'alerte Discord.")
+        warn("syn.request non dispo, pas d'alerte Discord.")
         return
     end
     local payload = {
@@ -1095,20 +1093,16 @@ local function sendDiscordAlert(message)
     end)
 end
 
--- Attente du bon remote
-local attackRemote = waitForPath(ReplicatedStorage, config.path, 15)
+-- Récupération des remotes au lancement
+local attackRemote = getPath(ReplicatedStorage, config.path)
 if not attackRemote or not (attackRemote:IsA("RemoteFunction") or attackRemote:IsA("RemoteEvent")) then
-    local msg = string.format(
-        "Remote introuvable ou type invalide pour le chemin **%s**.\n⚠️ Script stoppé.",
-        table.concat(config.path, ".")
-    )
+    local msg = "Remote introuvable pour le chemin : " .. table.concat(config.path, ".")
     warn(msg)
     sendDiscordAlert(msg)
     return
 end
 
--- Volley
-local volleyRemote = waitForPath(ReplicatedStorage, { "Package", "Events", "voleys" }, 5)
+local volleyRemote = getPath(ReplicatedStorage, { "Package", "Events", "voleys" })
 
 -- Liste des skills
 local attacks = {
@@ -1116,7 +1110,7 @@ local attacks = {
     "Wolf Fang Fist", "High Power Rush", "Meteor Strike", "Meteor Charge"
 }
 
--- Fonction trouver boss
+-- Trouver boss proche
 local function findClosestBoss(playerChar, maxDist)
     if not playerChar then return nil end
     local hrp = playerChar:FindFirstChild("HumanoidRootPart")
@@ -1142,11 +1136,11 @@ local function findClosestBoss(playerChar, maxDist)
     return nil
 end
 
--- Boucle principale
+-- Boucle principale optimisée
 local lastAttack = 0
 task.spawn(function()
     while true do
-        task.wait(0.1)
+        task.wait(0.05) -- boucle plus rapide
 
         if not savedStates["AutoNotSafeSkills"] then continue end
 
@@ -1171,7 +1165,7 @@ task.spawn(function()
                 if boss and tick() - lastAttack >= attackCooldown then
                     lastAttack = tick()
 
-                    -- Boucle sur chaque attaque
+                    -- Rafale instant
                     for _, atk in ipairs(attacks) do
                         safeInvoke(attackRemote, atk, attackArgument)
                     end
