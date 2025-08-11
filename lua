@@ -669,7 +669,7 @@ task.spawn(function()
 	while true do
 		task.wait()
 		local success, err = pcall(function()
-			if data.Strength.Value < 150000001 and game.PlaceId ~= 3311165597 and savedStates["TPBossPlanet"] then
+			if data.Strength.Value < 210000001 and game.PlaceId ~= 3311165597 and savedStates["TPBossPlanet"] then
 				local A_1 = "Earth"
 				local Event = events.TP
 				if game.PlaceId ~= 3311165597 then
@@ -677,7 +677,7 @@ task.spawn(function()
 
 					task.wait(8)
 				end
-			elseif data.Strength.Value >= 150000001  and game.PlaceId ~= 5151400895 and savedStates["TPBossPlanet"] then
+			elseif data.Strength.Value >= 210000001  and game.PlaceId ~= 5151400895 and savedStates["TPBossPlanet"] then
 				local A_1 = "Vills Planet"
 				local Event = events.TP
 				if game.PlaceId ~= 5151400895 then
@@ -805,7 +805,6 @@ end)
 
 
 
-
 local UserInputService = game:GetService("UserInputService")
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -820,16 +819,14 @@ local PaidForms = {
 
 local equipskill = ReplicatedStorage:WaitForChild("Package"):WaitForChild("Events"):WaitForChild("equipskill")
 
--- Fonction pour simuler la touche G
 local function pressG()
 	pcall(function()
-		keypress(0x47)
+		keypress(0x47) -- G
 		task.wait(0.1)
 		keyrelease(0x47)
 	end)
 end
 
--- Fonction utilitaire pour obtenir un personnage valide
 local function getValidCharacter()
 	local character = player.Character or player.CharacterAdded:Wait()
 	while not character:FindFirstChild("Stats") do
@@ -839,11 +836,11 @@ local function getValidCharacter()
 	return character
 end
 
+local function statsAreHigh(stats)
+	return stats.Strength.Value > 5000 and stats.Defense.Value > 5000
+	   and stats.Energy.Value > 5000 and stats.Speed.Value > 5000
+end
 
-
-
-
--- Boucle principale
 task.spawn(function()
 	while true do
 		task.wait(0.3)
@@ -853,12 +850,7 @@ task.spawn(function()
 				local stats = character:FindFirstChild("Stats")
 				local status = player:FindFirstChild("Status") or player:WaitForChild("Status")
 
-				if stats 
-					and stats:FindFirstChild("Strength") and stats:FindFirstChild("Defense")
-					and stats:FindFirstChild("Energy") and stats:FindFirstChild("Speed")
-					and stats.Strength.Value > 5000 and stats.Defense.Value > 5000
-					and stats.Energy.Value > 5000 and stats.Speed.Value > 5000 then
-
+				if stats and status and statsAreHigh(stats) then
 					local current = status:FindFirstChild("Transformation") and status.Transformation.Value or ""
 					local best = nil
 
@@ -866,16 +858,14 @@ task.spawn(function()
 						local success, result = pcall(function()
 							return equipskill:InvokeServer(form)
 						end)
-
 						if success and result then
 							best = form
 							break
 						end
 					end
 
-					if best and best ~= current then
-						pressG()
-					elseif best == current and not status.Transforming.Value then
+					-- Forcer appui sur G si forme différente ou si transformation en cours
+					if best and (best ~= current or status.Transforming.Value) then
 						pressG()
 					end
 				end
@@ -903,58 +893,60 @@ local Forms = {
 
 local equipskill = ReplicatedStorage:WaitForChild("Package"):WaitForChild("Events"):WaitForChild("equipskill")
 
--- Fonction pour simuler la touche G
+-- Simuler la touche G
 local function pressG()
 	pcall(function()
-		keypress(0x47) -- touche G
+		keypress(0x47)
 		task.wait(0.1)
 		keyrelease(0x47)
 	end)
 end
 
--- Fonction utilitaire pour obtenir le Character valide après une mort
+-- Attendre un personnage complet avec Stats
 local function getValidCharacter()
 	local character = player.Character or player.CharacterAdded:Wait()
-	while not character:FindFirstChild("Stats") do
+	while not (character and character:FindFirstChild("Stats")) do
 		character = player.CharacterAdded:Wait()
-		character:WaitForChild("Stats")
 	end
+	character:WaitForChild("Stats")
 	return character
 end
 
--- Boucle principale
+-- Fonction pour vérifier si les stats sont au dessus du seuil
+local function statsAreHigh(stats)
+	return stats.Strength.Value > 5000 and stats.Defense.Value > 5000
+		and stats.Energy.Value > 5000 and stats.Speed.Value > 5000
+end
+
+-- Fonction pour trouver la meilleure forme à équiper
+local function findBestForm()
+	for _, form in ipairs(Forms) do
+		local success, result = pcall(function()
+			return equipskill:InvokeServer(form)
+		end)
+		if success and result then
+			return form
+		end
+	end
+	return nil
+end
+
 task.spawn(function()
 	while true do
-		task.wait(0.6)
+		task.wait(0.2)
+
 		if savedStates["AutoForm"] then
 			pcall(function()
 				local character = getValidCharacter()
 				local stats = character:FindFirstChild("Stats")
 				local status = player:FindFirstChild("Status") or player:WaitForChild("Status")
 
-				if stats 
-					and stats:FindFirstChild("Strength") and stats:FindFirstChild("Defense")
-					and stats:FindFirstChild("Energy") and stats:FindFirstChild("Speed")
-					and stats.Strength.Value > 5000 and stats.Defense.Value > 5000
-					and stats.Energy.Value > 5000 and stats.Speed.Value > 5000 then
-
+				if stats and status and statsAreHigh(stats) then
 					local current = status:FindFirstChild("Transformation") and status.Transformation.Value or ""
-					local best
+					local best = findBestForm()
 
-					for _, form in ipairs(Forms) do
-						local success, result = pcall(function()
-							return equipskill:InvokeServer(form)
-						end)
-
-						if success and result then
-							best = form
-							break
-						end
-					end
-
-					if best and best ~= current then
-						pressG()
-					elseif best == current and not status.Transforming.Value then
+					-- Toujours rééquiper si ce n’est pas la forme actuelle, ou si en train de transformer (pour éviter blocage)
+					if best and (best ~= current or status.Transforming.Value) then
 						pressG()
 					end
 				end
@@ -974,21 +966,19 @@ local VirtualInputManager = game:GetService("VirtualInputManager")
 local player = Players.LocalPlayer
 local rs = ReplicatedStorage:WaitForChild("Package"):WaitForChild("Events")
 
--- Liste des skills
 local attacks = {
     "Super Dragon Fist", "God Slicer", "Spirit Barrage", "Mach Kick",
     "Wolf Fang Fist", "High Power Rush", "Meteor Strike", "Meteor Charge"
 }
 
--- Détection mobile
 local isMobile = UserInputService.TouchEnabled and not UserInputService.KeyboardEnabled
 
--- Utilitaire clic / activation
 local function simulateLeftClick()
     VirtualInputManager:SendMouseButtonEvent(0, 0, 0, true, game, 0)
     task.wait(0.05)
     VirtualInputManager:SendMouseButtonEvent(0, 0, 0, false, game, 0)
 end
+
 local function activateTool(tool)
     if not tool then return end
     if isMobile then
@@ -998,14 +988,12 @@ local function activateTool(tool)
     end
 end
 
--- Vérifie et équipe tous les skills manquants
 local function ensureAllSkillsInBackpack()
     for _, skillName in ipairs(attacks) do
         if not player.Backpack:FindFirstChild(skillName) then
             pcall(function()
                 rs.equipskill:InvokeServer(skillName)
             end)
-            -- Attente jusqu'à ce que le skill apparaisse
             local timeout = 0
             repeat
                 task.wait(0.05)
@@ -1015,7 +1003,6 @@ local function ensureAllSkillsInBackpack()
     end
 end
 
--- Cherche le boss le plus proche (5 studs max)
 local function getClosestBoss()
     local char = player.Character
     if not (char and char:FindFirstChild("HumanoidRootPart")) then return nil end
@@ -1038,19 +1025,16 @@ local function getClosestBoss()
     return closest
 end
 
--- Gestion respawn
 local respawning = false
 player.CharacterAdded:Connect(function()
     respawning = true
 end)
 
--- Boucle principale
 task.spawn(function()
     while true do
         task.wait(0.1)
         if savedStates and savedStates["AutoSkills"] then
             pcall(function()
-                -- Si respawn → rééquiper tout avant d'attaquer
                 if respawning then
                     repeat task.wait() until player.Character and player.Character:FindFirstChild("HumanoidRootPart")
                     ensureAllSkillsInBackpack()
@@ -1060,7 +1044,6 @@ task.spawn(function()
                 local char = player.Character
                 if not (char and char:FindFirstChild("Humanoid") and char:FindFirstChild("HumanoidRootPart")) then return end
 
-                -- Vérifie à chaque boucle que tous les skills sont dans le Backpack
                 ensureAllSkillsInBackpack()
 
                 local boss = getClosestBoss()
@@ -1069,11 +1052,11 @@ task.spawn(function()
                         local tool = player.Backpack:FindFirstChild(skillName)
                         if tool then
                             char.Humanoid:EquipTool(tool)
-                            task.wait(0.10)
+                            task.wait(0.05) -- petit temps pour équiper avant activer
                             activateTool(tool)
-                            task.wait(0.15)
                             char.Humanoid:UnequipTools()
-                            task.wait(0.18)
+                            -- Attente longue après chaque outil pour respecter ta demande
+                            task.wait(2.5)
                         end
                     end
                 end
@@ -1081,6 +1064,7 @@ task.spawn(function()
         end
     end
 end)
+
 
 
 
