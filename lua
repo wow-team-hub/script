@@ -1003,28 +1003,6 @@ local function ensureAllSkillsInBackpack()
     end
 end
 
-local function getClosestBoss()
-    local char = player.Character
-    if not (char and char:FindFirstChild("HumanoidRootPart")) then return nil end
-    local pos = char.HumanoidRootPart.Position
-    local closest, minDist = nil, 5
-    for _, model in ipairs(workspace:WaitForChild("Living"):GetChildren()) do
-        if model:IsA("Model")
-        and model:FindFirstChild("Humanoid")
-        and model:FindFirstChild("HumanoidRootPart")
-        and model.Humanoid.Health > 0
-        and model.Name ~= char.Name
-        then
-            local dist = (model.HumanoidRootPart.Position - pos).Magnitude
-            if dist < minDist then
-                minDist = dist
-                closest = model
-            end
-        end
-    end
-    return closest
-end
-
 local respawning = false
 player.CharacterAdded:Connect(function()
     respawning = true
@@ -1046,18 +1024,26 @@ task.spawn(function()
 
                 ensureAllSkillsInBackpack()
 
-                local boss = getClosestBoss()
-                if boss then
-                    for _, skillName in ipairs(attacks) do
-                        local tool = player.Backpack:FindFirstChild(skillName)
-                        if tool then
-                            char.Humanoid:EquipTool(tool)
-                            task.wait(0.05) -- petit temps pour équiper avant activer
+                local boss = nil
+                -- Recherche de boss facultative ici, ou tu peux l’enlever si pas nécessaire
+
+                for _, skillName in ipairs(attacks) do
+                    local tool = player.Backpack:FindFirstChild(skillName)
+                    if tool then
+                        char.Humanoid:EquipTool(tool)
+                        task.wait(0.05) -- petit délai pour être sûr que l’outil est équipé
+
+                        -- Clique 3 fois rapidement
+                        for _=1,3 do
                             activateTool(tool)
-                            char.Humanoid:UnequipTools()
-                            -- Attente longue après chaque outil pour respecter ta demande
-                            task.wait(2.5)
+                            task.wait(0.1) -- court délai entre clics (0.1s)
                         end
+
+                        -- Déséquipe l’outil
+                        char.Humanoid:UnequipTools()
+
+                        -- Attente de 2.5s avant de passer au suivant
+                        task.wait(2.5)
                     end
                 end
             end)
